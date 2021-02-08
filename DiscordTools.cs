@@ -58,7 +58,27 @@ namespace DiscordQueueSystem
                         case "!join":
                             Program.group.Add(message.Author.Id, message.Author, message.Author.Username, message.Author.ToString(), true, false);
                             Console.WriteLine(Program.group.ToString());
-                            await message.Author.SendMessageAsync($"You have joined the queue and are currently in position {Program.group.Players().Length}.");
+                            await message.Author.SendMessageAsync($"You have joined the queue and are currently in position {Program.group.Players().Length}.\n" +
+                                $"Please tell me your favourite weapons in order, if you have any. if not just wait for another message with the server ID\n" +
+                                $"Example:\"!favourites hbg h sns hh\"\n" +
+                                $"THIS FEATURE IS STILL BEING DEVELOPED AND DOES NOT CURRENTLY WORK");//DEV THINGS REMOVE WHEN DONE
+                            break;
+
+                        case "!favourites":
+                            User[] players = Program.group.Players();
+                            bool exists = false;
+                            foreach (var player in players)
+                            {
+                                if (player.ID==message.Author.Id)
+                                {
+                                    exists = true;
+                                }
+                            }
+
+                            if (exists)
+                            {
+                                //add the favourites to a "favourites" list or array in that user
+                            }
                             break;
 
                         case "!leave":
@@ -91,7 +111,33 @@ namespace DiscordQueueSystem
                                 }
                             }
                             break;
-
+                        case "!pullB": //MAKE THIS PULL BALANCED PEOPLE (DIVIDE TOTAL INTO 3 OR 4 sharp, blunt, ranged then pull the first slots in each of those)
+                            index = Program.group.Find(message.Author.Id);
+                            if (Program.group.Users[index].IsAdmin)
+                            {
+                                User[] pulledUsers = new User[0];
+                                for (int i = 0; i < Convert.ToInt32(command[1]); i++)
+                                {
+                                    try
+                                    {
+                                        await Program.group.Players()[i].SocketUser.SendMessageAsync($"You were pulled for the {"placeholder"} weapon type, but any weapon is okay. server ID: {command[2]}"); //PLACEHOLDER REMOVE WHEN DONE
+                                        pulledUsers = Tools.Append(pulledUsers, Program.group.Players()[i]);
+                                        Program.group.Remove(Program.group.Players()[i].ID);
+                                    }
+                                    catch
+                                    {
+                                    }
+                                }
+                                foreach (var admin in Program.group.Admins())
+                                {
+                                    await admin.SocketUser.SendMessageAsync($"These players have been pulled:");
+                                    foreach (var user in pulledUsers)
+                                    {
+                                        await admin.SocketUser.SendMessageAsync($"Name: {user.UserName}, ID: {user.ID}");
+                                    }
+                                }
+                            }
+                            break;
                         default:
                             Console.WriteLine("a message has been recieved");
                             break;

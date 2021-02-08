@@ -12,6 +12,7 @@ namespace DiscordQueueSystem
             HashName = hashName;
             WantsToPlay = wantsToPlay;
             IsAdmin = isAdmin;
+            //GS SNS DB LS H HH L GL SA CB IG B LBG HBG
         }
 
         public ulong ID
