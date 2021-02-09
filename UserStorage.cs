@@ -90,7 +90,7 @@ namespace DiscordQueueSystem
                     return -1;
             }
         }
-        public int Add(ulong id = 0, SocketUser socketUser = null, string userName = "0", string hashName = "0", bool wantsToPlay = true, string[] weapons = null, string pulledReason = "", bool isAdmin = false)
+        public int Add(ulong id = 0, SocketUser? socketUser = null, string userName = "0", string hashName = "0", bool wantsToPlay = true, string[]? weapons = null, string? pulledReason = "", bool isAdmin = false)
         {
             int index = Find(id);
             if (index == -1)

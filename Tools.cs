@@ -73,7 +73,7 @@ namespace DiscordQueueSystem
             return output;
         }
 
-        public static T[] Append<T>(T[] inputArray, params T[] input) //ADDS A NEW FIELD TO AN ARRAY AND FILLS IT
+        public static T[] Append<T>(T[]? inputArray, params T[] input) //ADDS A NEW FIELD TO AN ARRAY AND FILLS IT
         {
             int posIndex = 0;
             T[] output = new T[1];
