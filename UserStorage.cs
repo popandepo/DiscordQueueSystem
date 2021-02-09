@@ -90,12 +90,12 @@ namespace DiscordQueueSystem
                     return -1;
             }
         }
-        public int Add(ulong id = 0, SocketUser socketUser = null, string userName = "0", string hashName = "0", bool wantsToPlay = true, bool isAdmin = false)
+        public int Add(ulong id = 0, SocketUser socketUser = null, string userName = "0", string hashName = "0", bool wantsToPlay = true, string[] weapons = null, string pulledReason = "", bool isAdmin = false)
         {
             int index = Find(id);
             if (index == -1)
             {
-                User temp = new User(id, socketUser, userName, hashName, wantsToPlay, isAdmin);
+                User temp = new User(id, socketUser, userName, hashName, wantsToPlay, weapons, pulledReason, isAdmin);
                 Users = Tools.Append(Users, temp);
 
                 return Users.Length - 1;
@@ -125,7 +125,64 @@ namespace DiscordQueueSystem
             {
                 if (user.WantsToPlay)
                 {
-                    output = Tools.Append(output,user);
+                    output = Tools.Append(output, user);
+                }
+            }
+            return output;
+        }
+
+        public User[] Sharp()
+        {//GS SNS DB LS H HH L GL SA CB IG B LBG HBG
+            User[] output = new User[0];
+            foreach (var user in Users)
+            {
+                if (user.WantsToPlay)
+                {
+                    foreach (var weapon in user.Weapons)
+                    {//GS SNS DB LS L GL SA CB IG
+                        if (weapon == "gs" || weapon == "sns" || weapon == "db" || weapon == "ls" || weapon == "l" || weapon == "gl" || weapon == "sa" || weapon == "cb" || weapon == "ig")
+                        {
+                            output = Tools.Append(output, user);
+                        }
+                    }
+                }
+            }
+            return output;
+        }
+
+        public User[] Blunt()
+        {
+            User[] output = new User[0];
+            foreach (var user in Users)
+            {
+                if (user.WantsToPlay)
+                {
+                    foreach (var weapon in user.Weapons)
+                    {//H HH
+                        if (weapon == "h" || weapon == "hh")
+                        {
+                            output = Tools.Append(output, user);
+                        }
+                    }
+                }
+            }
+            return output;
+        }
+
+        public User[] Ranged()
+        {
+            User[] output = new User[0];
+            foreach (var user in Users)
+            {
+                if (user.WantsToPlay)
+                {
+                    foreach (var weapon in user.Weapons)
+                    {//H HH
+                        if (weapon == "b" || weapon == "lbg" || weapon == "lbg")
+                        {
+                            output = Tools.Append(output, user);
+                        }
+                    }
                 }
             }
             return output;

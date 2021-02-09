@@ -17,7 +17,7 @@ namespace DiscordQueueSystem
                 switch (message.Author.Id)
                 {
                     case 235921495291854850: //ADD ADMINS HERE
-                        index = Program.group.Add(message.Author.Id, message.Author, message.Author.Username, message.Author.ToString(), false, true);
+                        index = Program.group.Add(message.Author.Id, message.Author, message.Author.Username, message.Author.ToString(), false, null, "", true);
                         break;
                     default:
                         //index = Program.group.Add(message.Author.Id, message.Author, message.Author.Username, message.Author.ToString(), false);
@@ -29,11 +29,12 @@ namespace DiscordQueueSystem
                     string[] command = { "-1" };
                     if (message.Content.Contains(' '))
                     {
-                        command = message.Content.Split(' ');
+                        string messageToLower = message.Content.ToLower();
+                        command = messageToLower.Split(' ');
                     }
                     else
                     {
-                        command[0] = message.Content;
+                        command[0] = message.Content.ToLower();
                     }
 
                     switch (command[0].Trim())
@@ -56,28 +57,35 @@ namespace DiscordQueueSystem
                             break;
 
                         case "!join":
-                            Program.group.Add(message.Author.Id, message.Author, message.Author.Username, message.Author.ToString(), true, false);
+                            Program.group.Add(message.Author.Id, message.Author, message.Author.Username, message.Author.ToString(), true, null, "", false);
                             Console.WriteLine(Program.group.ToString());
                             await message.Author.SendMessageAsync($"You have joined the queue and are currently in position {Program.group.Players().Length}.\n" +
-                                $"Please tell me your favourite weapons in order, if you have any. if not just wait for another message with the server ID\n" +
+                                $"Please tell me your favourite weapons in order, as many as you want. If you don't have any favourites just wait for another message with the server ID\n" +
                                 $"Example:\"!favourites hbg h sns hh\"\n" +
                                 $"THIS FEATURE IS STILL BEING DEVELOPED AND DOES NOT CURRENTLY WORK");//DEV THINGS REMOVE WHEN DONE
                             break;
 
                         case "!favourites":
+                            int temp = -1;
                             User[] players = Program.group.Players();
-                            bool exists = false;
-                            foreach (var player in players)
+                            for (int i = 0; i < players.Length; i++)
                             {
-                                if (player.ID==message.Author.Id)
+                                User? player = players[i];
+                                if (player.ID == message.Author.Id)
                                 {
-                                    exists = true;
+                                    temp = i;
+                                    break;
                                 }
                             }
 
-                            if (exists)
+                            if (temp != -1)
                             {
-                                //add the favourites to a "favourites" list or array in that user
+                                for (int i = 1; i < command.Length; i++)
+                                {
+                                    Tools.Append(Program.group.Users[temp].Weapons, command[i]);
+                                }
+
+
                             }
                             break;
 
@@ -92,14 +100,21 @@ namespace DiscordQueueSystem
                                 User[] pulledUsers = new User[0];
                                 for (int i = 0; i < Convert.ToInt32(command[1]); i++)
                                 {
-                                    try {
-                                    await Program.group.Players()[i].SocketUser.SendMessageAsync(command[2]);
-                                    pulledUsers = Tools.Append(pulledUsers, Program.group.Players()[i]);
-                                    Program.group.Remove(Program.group.Players()[i].ID);
+                                    try
+                                    {
+                                        await Program.group.Players()[i].SocketUser.SendMessageAsync(command[2]);
+                                        pulledUsers = Tools.Append(pulledUsers, Program.group.Players()[i]);
+                                        Program.group.Remove(Program.group.Players()[i].ID);
                                     }
                                     catch
                                     {
                                     }
+                                }
+                                int p = 1;
+                                foreach (var player in Program.group.Players())
+                                {
+                                    p++;
+                                    await player.SocketUser.SendMessageAsync($"You are now in position {p}");
                                 }
                                 foreach (var admin in Program.group.Admins())
                                 {
@@ -111,18 +126,99 @@ namespace DiscordQueueSystem
                                 }
                             }
                             break;
-                        case "!pullB": //MAKE THIS PULL BALANCED PEOPLE (DIVIDE TOTAL INTO 3 OR 4 sharp, blunt, ranged then pull the first slots in each of those)
+                        case "!pullB": //pull 1 sharp, 1 blunt and 1 ranged. the first one in each category which have the highest rated weapon type
                             index = Program.group.Find(message.Author.Id);
+                            User[] sharp = Program.group.Sharp();
+                            User[] blunt = Program.group.Blunt();
+                            User[] ranged = Program.group.Ranged();
+                            User[] sortedS = null;
+                            User[] sortedB = null;
+                            User[] sortedR = null;
+                            string[] pulledWeaponS = null;
+                            string[] pulledWeaponB = null;
+                            string[] pulledWeaponR = null;
                             if (Program.group.Users[index].IsAdmin)
                             {
-                                User[] pulledUsers = new User[0];
-                                for (int i = 0; i < Convert.ToInt32(command[1]); i++)
+                                User[] pulledUsers = null;
+                                for (int i = 0; i < 1; i++)
                                 {
                                     try
                                     {
-                                        await Program.group.Players()[i].SocketUser.SendMessageAsync($"You were pulled for the {"placeholder"} weapon type, but any weapon is okay. server ID: {command[2]}"); //PLACEHOLDER REMOVE WHEN DONE
-                                        pulledUsers = Tools.Append(pulledUsers, Program.group.Players()[i]);
-                                        Program.group.Remove(Program.group.Players()[i].ID);
+
+
+                                        foreach (var suser in sharp)
+                                        {
+                                            for (int s = 0; s < suser.Weapons.Length; s++)
+                                            {
+                                                if (suser.Weapons[s] == "gs" || suser.Weapons[s] == "sns" || suser.Weapons[s] == "db" || suser.Weapons[s] == "ls" || suser.Weapons[s] == "l" || suser.Weapons[s] == "gl" || suser.Weapons[s] == "sa" || suser.Weapons[s] == "cb" || suser.Weapons[s] == "ig")
+                                                {
+                                                    sortedS = Tools.Append(sortedS, suser);
+                                                    pulledWeaponS = Tools.Append(pulledWeaponS, suser.Weapons[s]);
+                                                }
+
+                                            }
+                                        }
+                                        foreach (var buser in blunt)
+                                        {
+                                            for (int b = 0; b < buser.Weapons.Length; b++)
+                                            {
+                                                if (buser.Weapons[b] == "h" || buser.Weapons[b] == "hh")
+                                                {
+                                                    sortedB = Tools.Append(sortedB, buser);
+                                                    pulledWeaponB = Tools.Append(pulledWeaponB, buser.Weapons[b]);
+                                                }
+
+                                            }
+                                        }
+                                        foreach (var ruser in ranged)
+                                        {
+                                            for (int r = 0; r < ruser.Weapons.Length; r++)
+                                            {
+                                                if (ruser.Weapons[r] == "b" || ruser.Weapons[r] == "lbg" || ruser.Weapons[r] == "hbg")
+                                                {
+                                                    sortedR = Tools.Append(sortedR, ruser);
+                                                    pulledWeaponR = Tools.Append(pulledWeaponR, ruser.Weapons[r]);
+                                                }
+
+                                            }
+                                        }
+                                        try
+                                        {
+                                            Program.group.Remove(sortedS[0].ID);
+                                        }
+                                        catch { }
+                                        try
+                                        {
+                                            Program.group.Remove(sortedB[0].ID);
+                                        }
+                                        catch { }
+                                        try
+                                        {
+                                            Program.group.Remove(sortedR[0].ID);
+                                        }
+                                        catch { }
+
+                                        pulledUsers[0] = sortedS[0] ?? Program.group.Players()[0] ?? null;
+                                        if (pulledUsers[0]==Program.group.Players()[0])
+                                        {
+                                            Program.group.Remove(pulledUsers[0].ID);
+                                        }
+
+                                        pulledUsers[1] = sortedB[0] ?? Program.group.Players()[0] ?? null;
+                                        if (pulledUsers[1] == Program.group.Players()[0])
+                                        {
+                                            Program.group.Remove(pulledUsers[0].ID);
+                                        }
+
+                                        pulledUsers[2] = sortedR[0] ?? Program.group.Players()[0] ?? null;
+                                        if (pulledUsers[2] == Program.group.Players()[0])
+                                        {
+                                            Program.group.Remove(pulledUsers[0].ID);
+                                        }
+
+                                        pulledUsers[0].PulledReason = pulledWeaponS[0];
+                                        pulledUsers[1].PulledReason = pulledWeaponB[0];
+                                        pulledUsers[2].PulledReason = pulledWeaponR[0];
                                     }
                                     catch
                                     {
@@ -133,7 +229,7 @@ namespace DiscordQueueSystem
                                     await admin.SocketUser.SendMessageAsync($"These players have been pulled:");
                                     foreach (var user in pulledUsers)
                                     {
-                                        await admin.SocketUser.SendMessageAsync($"Name: {user.UserName}, ID: {user.ID}");
+                                        await admin.SocketUser.SendMessageAsync($"Name: {user.UserName}, ID: {user.ID}, Weapon: {user.PulledReason}");
                                     }
                                 }
                             }

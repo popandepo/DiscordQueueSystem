@@ -108,7 +108,7 @@ namespace DiscordQueueSystem
             return output;
         }
 
-        public static T[] Remove<T>(T[] inputArray) //ADDS A NEW FIELD TO AN ARRAY AND FILLS IT
+        public static T[] Remove<T>(T[] inputArray) //Removes a field in an array
         {
             T[] output = new T[inputArray.Length - 1];
             for (int i = 0; i < output.Length + 1; i++)
