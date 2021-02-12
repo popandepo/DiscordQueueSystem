@@ -3,6 +3,7 @@ using Discord.WebSocket;
 using DiscordQueueSystem.Config;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -22,7 +23,8 @@ namespace DiscordQueueSystem
         {
             try
             {
-                BotConfig = JsonSerializer.Deserialize<BotConfig>($"{Directory.GetCurrentDirectory()}/appsettings.json");
+                
+                BotConfig = JsonSerializer.Deserialize<BotConfig>(GetEmbeddedResourceContent("DiscordQueueSystem.appsettings.json"));
                 StateMachine(States.Boot);
                 StateMachine(States.MainMenu);
             }
@@ -31,6 +33,17 @@ namespace DiscordQueueSystem
                 IOException error = new IOException();
                 SafeExit(error);
             }
+        }
+
+        public static string GetEmbeddedResourceContent(string resourceName)
+        {
+            Assembly asm = Assembly.GetExecutingAssembly();
+            Stream stream = asm.GetManifestResourceStream(resourceName);
+            StreamReader source = new StreamReader(stream);
+            string fileContent = source.ReadToEnd();
+            source.Dispose();
+            stream.Dispose();
+            return fileContent;
         }
 
         public static void StateMachine(States state = States.Default) //tells the program where it is and what it should be doing
