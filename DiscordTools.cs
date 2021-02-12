@@ -1,7 +1,10 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using DiscordQueueSystem.Config;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DiscordQueueSystem
@@ -13,6 +16,11 @@ namespace DiscordQueueSystem
         {
             if (!message.Author.IsBot)//if author of message is not a bot: continue
             {
+                var channelID = message.Channel.Id;
+
+
+
+
                 //bool isDM = false; //ADD FEATURES THAT MAKE THE BOT MORE EFFICIENT AND NOT RESPONT TO EVERY MESSAGE IN A SERVER
 
                 //var dMColl = Program._client.GetDMChannelsAsync().Result;
@@ -37,7 +45,8 @@ namespace DiscordQueueSystem
                 //    }
                 //}
 
-                if (message.Channel.Id == 809723367632535554) //mentioned[0].Id == Program._client.CurrentUser.Id||isDM)//if the bot has been @ed or DMed: continue
+                //if (message.Channel.Id == 809723367632535554) //mentioned[0].Id == Program._client.CurrentUser.Id||isDM)//if the bot has been @ed or DMed: continue
+                if (ChannelDictionary.ContainsKey(message.Channel.Id)) //mentioned[0].Id == Program._client.CurrentUser.Id||isDM)//if the bot has been @ed or DMed: continue
                 {
 
                     int index = -1;
@@ -118,6 +127,36 @@ namespace DiscordQueueSystem
             return index;
         }
 
+        static Dictionary<ulong, ChannelType> ChannelDictionary = new Dictionary<ulong, ChannelType>();
+        internal static Task ChannelCreated(SocketChannel arg)
+        {
+            FetchAndPopulateChannelDictionary();
+
+            return Task.CompletedTask;
+        }
+
+        private static void FetchAndPopulateChannelDictionary()
+        {
+            var DMColl = Program._client.GetDMChannelsAsync().Result.Select(x => x.Id).ToList();
+            var channelIDs = Program.BotConfig.ChannelIDs;
+
+            foreach (var dm in DMColl)
+            {
+                if (!ChannelDictionary.ContainsKey(dm))
+                {
+                    ChannelDictionary.Add(dm, ChannelType.DM);
+                }
+                
+            }
+            foreach (var c in channelIDs)
+            {
+                if (ChannelDictionary.ContainsKey(c))
+                {
+                    ChannelDictionary.Add(c, ChannelType.Group);
+                }
+            }
+        }
+
         private static async Task<int> Pull(SocketMessage message, int amount, string text = "-1")//pulls any amount of users and if given, sends them a message
         {
             int index = Program.group.Find(message.Author.Id);
@@ -134,8 +173,9 @@ namespace DiscordQueueSystem
                             pulledUsers = Tools.Append(pulledUsers, Program.group.Players()[i]);
                             Program.group.Remove(Program.group.Players()[i].ID);
                         }
-                        catch
+                        catch(Exception e) //Swallow exception
                         {
+                            Console.WriteLine($"Exception in Pull - line 178:: Message[{e.Message}], stacktrace[{e?.StackTrace}]");
                         }
                     }
                     else
@@ -370,7 +410,9 @@ namespace DiscordQueueSystem
             Program._client.DownloadUsersAsync(Program._client.Guilds);
             Program.group = new UserStorage();
             Console.WriteLine("Users are harvested!");
+            FetchAndPopulateChannelDictionary();
             Program.userStorageInit = true;
+
             return Task.CompletedTask;
         }
 

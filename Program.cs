@@ -1,7 +1,9 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using DiscordQueueSystem.Config;
 using System;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace DiscordQueueSystem
@@ -13,10 +15,14 @@ namespace DiscordQueueSystem
         public static UserStorage group;
         public static bool adminLoop;
         public static bool userStorageInit = false;
+
+        public static BotConfig BotConfig { get; private set; }
+
         static void Main(string[] args) //Calls the state machine to boot then main menu. if anything goes wrong safe exit
         {
             try
             {
+                BotConfig = JsonSerializer.Deserialize<BotConfig>($"{Directory.GetCurrentDirectory()}/appsettings.json");
                 StateMachine(States.Boot);
                 StateMachine(States.MainMenu);
             }
@@ -75,8 +81,10 @@ namespace DiscordQueueSystem
             await _client.SetStatusAsync(UserStatus.Online);
             Console.WriteLine("6");
             _client.MessageReceived += DiscordTools.MessageHandler;
+            _client.ChannelCreated += DiscordTools.ChannelCreated;
             Console.WriteLine("7");
             _client.Ready += DiscordTools.InitUserStorage;
+            //Add static list of channels
             Console.WriteLine("8");
             while (!userStorageInit)
             {
