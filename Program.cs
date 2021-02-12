@@ -81,6 +81,8 @@ namespace DiscordQueueSystem
             while (!userStorageInit)
             {
             }
+            Console.WriteLine("9");
+            //UNCOMMENT THIS IF YOU WANT USERS TO PERSIST
             //LoadFromFile();
             //Console.WriteLine("memory restored!");
         }

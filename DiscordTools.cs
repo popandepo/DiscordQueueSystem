@@ -9,35 +9,62 @@ namespace DiscordQueueSystem
     public class DiscordTools
     {
 
-        public static async Task MessageHandler(SocketMessage message) //fires when anyone sends a message
+        public static async Task MessageHandler(SocketMessage message)//fires when anyone sends a message
         {
-            if (!message.Author.IsBot)
+            if (!message.Author.IsBot)//if author of message is not a bot: continue
             {
-                int index = -1;
-                switch (message.Author.Id)
-                {
-                    case 235921495291854850: //ADD ADMINS HERE
-                        index = Program.group.Add(message.Author.Id, message.Author, message.Author.Username, message.Author.ToString(), false, null, "", true);
-                        break;
-                    default:
-                        //index = Program.group.Add(message.Author.Id, message.Author, message.Author.Username, message.Author.ToString(), false);
-                        break;
-                }
+                //bool isDM = false; //ADD FEATURES THAT MAKE THE BOT MORE EFFICIENT AND NOT RESPONT TO EVERY MESSAGE IN A SERVER
 
-                if (message.Content.StartsWith('!'))
+                //var dMColl = Program._client.GetDMChannelsAsync().Result;
+                //var mentionedColl = message.MentionedUsers;
+                //IDMChannel[]? dM;
+                //SocketUser[]? mentioned;
+
+                //foreach (var channel in dMColl)
+                //{
+                //    dM = Tools.Append(dM, channel);
+                //}
+                //foreach (var muser in mentionedColl)
+                //{
+                //    mentioned = Tools.Append(mentioned, muser);
+                //}
+
+                //foreach (var channel in dM)
+                //{
+                //    if (message.Channel.Id==channel.Id)
+                //    {
+                //        isDM = true;
+                //    }
+                //}
+
+                if (message.Channel.Id == 809723367632535554) //mentioned[0].Id == Program._client.CurrentUser.Id||isDM)//if the bot has been @ed or DMed: continue
                 {
-                    string[] command = { "-1" };
-                    if (message.Content.Contains(' '))
+
+                    int index = -1;
+                    switch (message.Author.Id)
                     {
-                        string messageToLower = message.Content.ToLower();
-                        command = messageToLower.Split(' ');
-                    }
-                    else
-                    {
-                        command[0] = message.Content.ToLower();
+                        case 235921495291854850: //ADD ADMINS HERE
+                            index = Program.group.Add(message.Author.Id, message.Author, message.Author.Username, message.Author.ToString(), false, null, "", true);
+                            break;
+                        default:
+                            break;
                     }
 
-                    await CommandHandler(message, index, command);
+                    if (message.Content.StartsWith('!'))
+                    {
+                        string[] command = { "-1" };
+                        if (message.Content.Contains(' '))
+                        {
+                            string messageToLower = message.Content.ToLower();
+                            command = messageToLower.Split(' ');
+                        }
+                        else
+                        {
+                            command[0] = message.Content.ToLower();
+                        }
+
+                        await CommandHandler(message, index, command);
+                    }
                 }
             }
         }
@@ -69,7 +96,7 @@ namespace DiscordQueueSystem
                 case "!pull":
                     try
                     {
-                        index = await Pull(message, Convert.ToInt32(command[1].Trim()),command[2]);
+                        index = await Pull(message, Convert.ToInt32(command[1].Trim()), command[2]);
 
                     }
                     catch
@@ -79,7 +106,7 @@ namespace DiscordQueueSystem
                     }
                     break;
 
-                case "!pullB": //pull 1 sharp, 1 blunt and 1 ranged. the first one in each category which have the highest rated weapon type
+                case "!pullB":
                     index = await PullB(message, command);
                     break;
 
@@ -91,8 +118,7 @@ namespace DiscordQueueSystem
             return index;
         }
 
-        
-        private static async Task<int> Pull(SocketMessage message, int amount)
+        private static async Task<int> Pull(SocketMessage message, int amount, string text = "-1")//pulls any amount of users and if given, sends them a message
         {
             int index = Program.group.Find(message.Author.Id);
             if (Program.group.Users[index].IsAdmin)
@@ -100,14 +126,30 @@ namespace DiscordQueueSystem
                 User[] pulledUsers = new User[0];
                 for (int i = 0; i < amount; i++)
                 {
-                    try
+                    if (text != "-1")
                     {
-                        pulledUsers = Tools.Append(pulledUsers, Program.group.Players()[i]);
-                        Program.group.Remove(Program.group.Players()[i].ID);
+                        try
+                        {
+                            await Program.group.Players()[i].SocketUser.SendMessageAsync(text);
+                            pulledUsers = Tools.Append(pulledUsers, Program.group.Players()[i]);
+                            Program.group.Remove(Program.group.Players()[i].ID);
+                        }
+                        catch
+                        {
+                        }
                     }
-                    catch
+                    else
                     {
+                        try
+                        {
+                            pulledUsers = Tools.Append(pulledUsers, Program.group.Players()[i]);
+                            Program.group.Remove(Program.group.Players()[i].ID);
+                        }
+                        catch
+                        {
+                        }
                     }
+
                 }
                 int p = 1;
                 foreach (var player in Program.group.Players())
@@ -128,49 +170,12 @@ namespace DiscordQueueSystem
             return index;
         }
 
-        private static async Task<int> Pull(SocketMessage message, int amount, string text)
+        private static async Task<int> PullB(SocketMessage message, string[] command)//pulls 3 users with balanced composition
         {
             int index = Program.group.Find(message.Author.Id);
-            if (Program.group.Users[index].IsAdmin)
-            {
-                User[] pulledUsers = new User[0];
-                for (int i = 0; i < amount; i++)
-                {
-                    try
-                    {
-                        await Program.group.Players()[i].SocketUser.SendMessageAsync(text);
-                        pulledUsers = Tools.Append(pulledUsers, Program.group.Players()[i]);
-                        Program.group.Remove(Program.group.Players()[i].ID);
-                    }
-                    catch
-                    {
-                    }
-                }
-                int p = 1;
-                foreach (var player in Program.group.Players())
-                {
-                    p++;
-                    await player.SocketUser.SendMessageAsync($"You are now in position {p}");
-                }
-                foreach (var admin in Program.group.Admins())
-                {
-                    await admin.SocketUser.SendMessageAsync($"These players have been pulled:");
-                    foreach (var user in pulledUsers)
-                    {
-                        await admin.SocketUser.SendMessageAsync($"Name: {user.UserName}, ID: {user.ID}");
-                    }
-                }
-            }
-
-            return index;
-        }
-        
-        private static async Task<int> PullB(SocketMessage message, string[] command)
-        {
-            int index = Program.group.Find(message.Author.Id);
-            User[] sharp = Program.group.Sharp();
-            User[] blunt = Program.group.Blunt();
-            User[] ranged = Program.group.Ranged();
+            User[]? sharp = Program.group.Sharp();
+            User[]? blunt = Program.group.Blunt();
+            User[]? ranged = Program.group.Ranged();
             User[]? sortedS = null;
             User[]? sortedB = null;
             User[]? sortedR = null;
@@ -291,7 +296,7 @@ namespace DiscordQueueSystem
             return index;
         }
 
-        private static void Favourites(SocketMessage message, string[] command)
+        private static void Favourites(SocketMessage message, string[] command)//adds favourite weapons to a user
         {
             int temp = -1;
             User[] players = Program.group.Players();
@@ -316,7 +321,7 @@ namespace DiscordQueueSystem
             }
         }
 
-        private static async Task Join(SocketMessage message)
+        private static async Task Join(SocketMessage message)//adds a user to the queue
         {
             Program.group.Add(message.Author.Id, message.Author, message.Author.Username, message.Author.ToString(), true, null, "", false);
             Console.WriteLine(Program.group.ToString());
@@ -326,7 +331,7 @@ namespace DiscordQueueSystem
                 $"THIS FEATURE IS STILL BEING DEVELOPED AND DOES NOT CURRENTLY WORK FULLY");//DEV THINGS REMOVE WHEN DONE
         }
 
-        private static int Kill(SocketMessage message)
+        private static int Kill(SocketMessage message)//turns off the bot
         {
             int index = Program.group.Find(message.Author.Id);
             if (Program.group.Users[index].IsAdmin)
@@ -347,9 +352,9 @@ namespace DiscordQueueSystem
             }
 
             return index;
-        } 
+        }
 
-        public static async Task<Task> MessageAll(string message) //sends a message to every user currently stored
+        public static async Task<Task> MessageAll(string message)//sends a message to every user currently stored
         {
             var temp = Program.group.Users;
             foreach (var user in temp)
@@ -359,17 +364,17 @@ namespace DiscordQueueSystem
             return Task.CompletedTask;
         }
 
-        public static async Task<Task> InitUserStorage() //starts the user storage
+        public static async Task<Task> InitUserStorage()//starts the user storage
         {
             //Broadcast("I'm online! Harvesting...");
-            await Program._client.DownloadUsersAsync(Program._client.Guilds);
+            Program._client.DownloadUsersAsync(Program._client.Guilds);
             Program.group = new UserStorage();
             Console.WriteLine("Users are harvested!");
             Program.userStorageInit = true;
             return Task.CompletedTask;
         }
 
-        public static string WriteOrReadFile(string fileName) //reads or writes a file
+        public static string WriteOrReadFile(string fileName)//reads or writes a file
         {
             string token;
 

@@ -16,7 +16,6 @@ namespace DiscordQueueSystem
             IsAdmin = isAdmin;
             //GS SNS DB LS H HH L GL SA CB IG B LBG HBG
         }
-
         public ulong ID
         { get; set; }
 
@@ -32,7 +31,7 @@ namespace DiscordQueueSystem
         public bool WantsToPlay
         { get; set; }
 
-        public string[] Weapons
+        public string[]? Weapons
         { get; set; }
 
         public string PulledReason
